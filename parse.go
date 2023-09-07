@@ -188,12 +188,25 @@ func parseNextTrimmed(n int, b []byte) (ValueTrimmed, int, error) {
 	// Parse null, booleans, and numbers.
 	default:
 		n0 := n
+		hasDotOrE := false
 		for len(b) > n && (b[n] == '-' || b[n] == '+' || b[n] == '.' ||
 			('a' <= b[n] && b[n] <= 'z') ||
 			('A' <= b[n] && b[n] <= 'Z') ||
 			('0' <= b[n] && b[n] <= '9')) {
+			if b[n] == '.' || b[n] == 'e' || b[n] == 'E' {
+				hasDotOrE = true
+			}
 			n++
 		}
+		if !hasDotOrE {
+			i := 0
+			for len(b) > n && b[n0+i] == '0' {
+				i++
+				n0++
+			}
+			n0++
+		}
+
 		switch lit := Literal(b[n0:n:n]); {
 		case len(lit) == 0:
 			return nil, n0, newInvalidCharacterError(b[n0:], "at start of value")
